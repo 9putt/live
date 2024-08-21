@@ -22,8 +22,8 @@ async function getChannelId(channelName) {
     }
 }
 
-// กำหนดเส้นทางไปยังไฟล์ channel.txt ในโฟลเดอร์ src
-const channelFilePath = path.join(__dirname, 'src', 'channel.txt');
+// กำหนดเส้นทางไปยังไฟล์ channel.txt ใน root directory
+const channelFilePath = path.join(__dirname, 'channel.txt');
 
 // ตรวจสอบว่าไฟล์ channel.txt มีอยู่หรือไม่
 if (!fs.existsSync(channelFilePath)) {
@@ -40,7 +40,7 @@ if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir);
 }
 
-// สมมติว่าคุณต้องการเขียนข้อมูลที่ประมวลผลแล้วลงในไฟล์ channel_info.txt
+// สร้างไฟล์ output channel_info.txt
 const outputFilePath = path.join(distDir, 'channel_info.txt');
 
 // เขียนข้อมูลช่องไปยังไฟล์ channel_info.txt
@@ -51,11 +51,14 @@ async function processChannels() {
     for (const channel of channels.split('\n')) {
         if (channel.trim()) {
             const cleanChannelName = channel.trim().replace('@', ''); // ลบ '@' ออกจากชื่อช่อง
+            console.log(`Trying to fetch Channel ID for: ${cleanChannelName}`);
             const channelId = await getChannelId(cleanChannelName); // ดึง Channel ID จาก YouTube API
             if (channelId) {
                 const m3u8Link = `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`; // สร้างลิงก์ m3u8 ด้วย Channel ID
-                console.log(`Processing channel: ${cleanChannelName}`);
+                console.log(`Successfully fetched Channel ID: ${channelId} for ${cleanChannelName}`);
                 fs.appendFileSync(outputFilePath, `- ${cleanChannelName}\n  ลิงก์: ${m3u8Link}\n`);
+            } else {
+                console.error(`Failed to fetch Channel ID for ${cleanChannelName}`);
             }
         }
     }
