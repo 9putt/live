@@ -1,9 +1,9 @@
-name: Run Generate Channel Info Script
+name: Generate Channel Info
 
 on:
   push:
     branches:
-      - main  # หรือ branch ที่คุณใช้งาน
+      - main
 
 jobs:
   build:
@@ -18,14 +18,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install node-fetch directly
-        run: npm install node-fetch
-
-      - name: Install other dependencies
+      - name: Install dependencies
         run: npm install
 
       - name: Run generate_channel_info_updated.js script
-        run: node generate_channel_info_updated.js
+        run: npm run generate
 
       - name: Upload generated channel_info.txt
         uses: actions/upload-artifact@v2
