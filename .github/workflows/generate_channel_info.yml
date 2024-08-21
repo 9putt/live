@@ -1,0 +1,34 @@
+name: Run Generate Channel Info Script
+
+on:
+  push:
+    branches:
+      - main  # หรือ branch ที่คุณใช้งาน
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository content
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install node-fetch directly
+        run: npm install node-fetch
+
+      - name: Install other dependencies
+        run: npm install
+
+      - name: Run generate_channel_info_updated.js script
+        run: node generate_channel_info_updated.js
+
+      - name: Upload generated channel_info.txt
+        uses: actions/upload-artifact@v2
+        with:
+          name: channel_info.txt
+          path: ./dist/channel_info.txt

@@ -1,0 +1,31 @@
+name: Publish Playlist
+
+on:
+  push:
+    branches:
+      - main  # หรือ branch ที่คุณใช้งาน
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository content
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install  # ใช้ npm install เพื่อให้แน่ใจว่า dependencies ถูกติดตั้งทั้งหมด
+
+      - name: Run generate script
+        run: node generate_channel_info_updated.js  # รันสคริปต์นี้หลังจากติดตั้ง dependencies เสร็จแล้ว
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
