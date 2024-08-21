@@ -30,7 +30,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add dist/channel_info.txt
+          git add -f dist/channel_info.txt  # ใช้ -f เพื่อ force add ไฟล์
           git commit -m "Update channel_info.txt"
           git push origin main
 
