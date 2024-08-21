@@ -1,29 +1,68 @@
 const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
+require('dotenv').config();
 
-// ตรวจสอบว่ามีโฟลเดอร์ dist อยู่แล้วหรือไม่ ถ้าไม่มีก็สร้างใหม่
-const distDir = path.join(__dirname, 'dist');
-if (!fs.existsSync(distDir)){
-    fs.mkdirSync(distDir);
+// Load the YouTube API key from the environment variables
+const YOUTUBE_API_KEY = process.env.YOUTUBEKEY;
+
+// Read the channel URLs from channel.txt
+const channelFilePath = './channel.txt';
+const channelUrls = fs.readFileSync(channelFilePath, 'utf8').split('\n').filter(Boolean);
+
+async function fetchChannelInfo(url) {
+    try {
+        // Extract the username from the URL
+        const username = url.split('@')[1];
+
+        // Get the Channel ID using the YouTube API
+        const response = await axios.get(`https://www.googleapis.com/youtube/v3/channels`, {
+            params: {
+                part: 'id,snippet',
+                forUsername: username,
+                key: YOUTUBE_API_KEY
+            }
+        });
+
+        const channel = response.data.items[0];
+        const channelId = channel.id;
+        const profileImage = channel.snippet.thumbnails.default.url;
+
+        // Construct the m3u8 link
+        const m3u8Link = `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`;
+
+        return {
+            name: channel.snippet.title,
+            id: channelId,
+            profileImage,
+            m3u8Link
+        };
+    } catch (error) {
+        console.error(`Failed to fetch Channel ID for ${url}:`, error.message);
+        return null;
+    }
 }
 
-// ตัวอย่างข้อมูลที่จะเขียนลงไฟล์ channel_info.txt
-const channels = [
-    {
-        name: "Sample Channel",
-        id: "UC1234567890ABCDEF",
-        profileImage: "https://example.com/profile.jpg",
-        m3u8Link: "https://ythls-v3.onrender.com/channel/UC1234567890ABCDEF.m3u8"
+async function generateChannelInfo() {
+    const results = [];
+
+    for (const url of channelUrls) {
+        const info = await fetchChannelInfo(url);
+        if (info) {
+            results.push(info);
+        }
     }
-];
 
-// สร้างข้อมูลเป็นข้อความเพื่อเขียนลงไฟล์
-const dataToWrite = channels.map(channel => {
-    return `Channel Name: ${channel.name}\nChannel ID: ${channel.id}\nProfile Image: ${channel.profileImage}\nm3u8 Link: ${channel.m3u8Link}\n\n`;
-}).join('');
+    // Format and write the results to channel_info.txt
+    const outputFilePath = './dist/channel_info.txt';
+    const outputData = results.map(info => 
+        `Channel Name: ${info.name}\n` +
+        `Channel ID: ${info.id}\n` +
+        `Profile Image: ${info.profileImage}\n` +
+        `m3u8 Link: ${info.m3u8Link}\n`
+    ).join('\n');
 
-// เขียนไฟล์ในโฟลเดอร์ dist
-fs.writeFileSync(path.join(distDir, 'channel_info.txt'), dataToWrite, 'utf8');
+    fs.writeFileSync(outputFilePath, outputData, 'utf8');
+    console.log(`Channel information has been written to ${outputFilePath}`);
+}
 
-console.log("Channel information has been written to", path.join(distDir, 'channel_info.txt'));
+generateChannelInfo();
