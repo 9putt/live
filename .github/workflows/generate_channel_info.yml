@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 jobs:
@@ -23,11 +22,19 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Create dist directory if it doesn't exist
+        run: mkdir -p ./dist
+
       - name: Run generate_channel_info_updated.js script
         run: node generate_channel_info_updated.js
 
-      - name: Upload generated channel_info.txt
-        uses: actions/upload-artifact@v4  # Updated from v2 to v4
-        with:
-          name: channel_info.txt
-          path: ./dist/channel_info.txt
+      - name: Move generated channel_info.txt to main directory
+        run: mv ./dist/channel_info.txt ./channel_info.txt
+
+      - name: Commit and push channel_info.txt
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add channel_info.txt
+          git commit -m "Update channel_info.txt"
+          git push
