@@ -1,46 +1,66 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-require('dotenv').config(); // โหลด dotenv เพื่อใช้งาน API key
+require('dotenv').config();
 
 const distDir = path.join(__dirname, 'dist');
 if (!fs.existsSync(distDir)){
     fs.mkdirSync(distDir);
 }
 
-// สร้างลิงก์ m3u8 โดยใช้ API key ที่ดึงมาจากไฟล์ .env หรือจาก secrets ใน GitHub
-const YOUTUBE_API_KEY = process.env.YOUTUBEKEY;
+const YOUTUBE_API_KEY = process.env.YOUTUBEKEY; // ดึง API Key จาก Environment Variable
+const channelFilePath = path.join(__dirname, 'channel.txt'); // ไฟล์ที่เก็บ URL ของช่อง YouTube
 
-const channels = [
-  "https://youtube.com/@voicetv",
-  "https://youtube.com/@MBCNEWS11",
-  "https://youtube.com/@letanahotelrestaurant24hrs"
-];
+async function getChannelInfo(channelUrl) {
+    try {
+        const channelName = channelUrl.split('@')[1];
+        const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+            params: {
+                part: 'snippet',
+                q: channelName,
+                type: 'channel',
+                key: YOUTUBE_API_KEY
+            }
+        });
 
-async function getChannelInfo(url) {
-  try {
-    const response = await axios.get(`https://www.googleapis.com/youtube/v3/channels?part=snippet&forUsername=${url}&key=${YOUTUBE_API_KEY}`);
-    const channel = response.data.items[0];
-    const channelId = channel.id;
-    const profileImage = channel.snippet.thumbnails.default.url;
-    return {
-      name: channel.snippet.title,
-      id: channelId,
-      profileImage: profileImage,
-      m3u8Link: `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`
-    };
-  } catch (error) {
-    console.error(`Failed to fetch data for ${url}`, error);
-    return null;
-  }
+        if (response.data.items.length > 0) {
+            const channel = response.data.items[0];
+            const channelId = channel.id.channelId;
+            const profileImage = channel.snippet.thumbnails.default.url;
+
+            return {
+                name: channel.snippet.title,
+                id: channelId,
+                profileImage: profileImage,
+                m3u8Link: `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`
+            };
+        } else {
+            throw new Error(`No channel found for ${channelUrl}`);
+        }
+    } catch (error) {
+        console.error(`Failed to fetch channel info for ${channelUrl}: ${error.message}`);
+        return null;
+    }
 }
 
-(async () => {
-  const results = await Promise.all(channels.map(getChannelInfo));
-  const dataToWrite = results.filter(Boolean).map(channel => {
-    return `Channel Name: ${channel.name}\nChannel ID: ${channel.id}\nProfile Image: ${channel.profileImage}\nm3u8 Link: ${channel.m3u8Link}\n\n`;
-  }).join('');
+async function generateChannelInfo() {
+    const channelUrls = fs.readFileSync(channelFilePath, 'utf-8').split('\n').filter(Boolean);
 
-  fs.writeFileSync(path.join(distDir, 'channel_info.txt'), dataToWrite);
-  console.log('Channel information has been written to', path.join(distDir, 'channel_info.txt'));
-})();
+    const channels = [];
+    for (const url of channelUrls) {
+        const info = await getChannelInfo(url);
+        if (info) {
+            channels.push(info);
+        }
+    }
+
+    const dataToWrite = channels.map(channel => {
+        return `Channel Name: ${channel.name}\nChannel ID: ${channel.id}\nProfile Image: ${channel.profileImage}\nm3u8 Link: ${channel.m3u8Link}\n\n`;
+    }).join('');
+
+    fs.writeFileSync(path.join(distDir, 'channel_info.txt'), dataToWrite);
+
+    console.log('Channel information has been written to ./dist/channel_info.txt');
+}
+
+generateChannelInfo();
