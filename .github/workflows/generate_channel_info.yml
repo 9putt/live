@@ -23,12 +23,18 @@ jobs:
         run: npm install
 
       - name: Run generate_channel_info_updated.js script
-        run: npm run generate
+        run: node generate_channel_info_updated.js
 
-      - name: Commit and push the updated channel_info.txt
+      - name: Commit and Push generated file to main
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add ./dist/channel_info.txt
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add dist/channel_info.txt
           git commit -m "Update channel_info.txt"
           git push origin main
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
