@@ -1,5 +1,0 @@
-Channel Name: Sample Channel
-Channel ID: UC1234567890ABCDEF
-Profile Image: https://example.com/profile.jpg
-m3u8 Link: https://ythls-v3.onrender.com/channel/UC1234567890ABCDEF.m3u8
-
