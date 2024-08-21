@@ -23,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run generate_channel_info.js script
-        run: npm run generate
+      - name: Run generate_channel_info_updated.js script
+  run: node generate_channel_info_updated.js
 
       - name: Upload generated channel_info.txt
         uses: actions/upload-artifact@v2
