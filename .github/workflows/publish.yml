@@ -3,7 +3,7 @@ name: Publish Playlist
 on:
   push:
     branches:
-      - main  # หรือ branch ที่คุณใช้งาน
+      - main  # หรือ branch 
 
 jobs:
   deploy:
