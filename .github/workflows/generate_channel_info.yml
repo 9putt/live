@@ -1,4 +1,4 @@
-name: Your Workflow Name
+name: Generate Channel Info
 
 on:
   push:
@@ -20,11 +20,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run your script
-        run: npm run your-script
+      - name: Install dependencies
+        run: npm install
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Run generate_channel_info_updated.js script
+        run: node generate_channel_info_updated.js
+
+      - name: Upload generated channel_info.txt
+        uses: actions/upload-artifact@v4  # Updated from v2 to v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          name: channel_info.txt
+          path: ./dist/channel_info.txt
