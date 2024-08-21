@@ -27,7 +27,7 @@ jobs:
         run: node generate_channel_info_updated.js
 
       - name: Upload generated channel_info.txt
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4  # Updated from v2 to v4
         with:
           name: channel_info.txt
           path: ./dist/channel_info.txt
