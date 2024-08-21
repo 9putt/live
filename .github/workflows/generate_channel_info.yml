@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
         run: npm install
 
       - name: Run generate_channel_info_updated.js script
-        run: node generate_channel_info_updated.js
+        run: npm run generate
 
       - name: Commit and Push generated file to main
         run: |
@@ -32,3 +33,9 @@ jobs:
           git add dist/channel_info.txt
           git commit -m "Update channel_info.txt"
           git push origin main
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
