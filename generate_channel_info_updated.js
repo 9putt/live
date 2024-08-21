@@ -1,19 +1,17 @@
 const fs = require('fs');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const path = require('path');
 
 const channelFilePath = 'channel.txt';
-const outputFilePath = './dist/channel_info.txt';
+const outputFilePath = path.join(__dirname, 'channel_info.txt');
 
 async function fetchChannelData(url) {
     try {
         const response = await axios.get(url);
         const $ = cheerio.load(response.data);
 
-        // ดึง Channel ID จาก meta tag ของหน้าเว็บ
         const channelId = $('meta[itemprop="channelId"]').attr('content');
-
-        // ดึง URL ของรูปภาพโปรไฟล์
         const profilePictureUrl = $('meta[property="og:image"]').attr('content');
 
         return { channelId, profilePictureUrl };
