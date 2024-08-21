@@ -29,8 +29,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git status  # ตรวจสอบสถานะของไฟล์ที่ถูกติดตาม
-          git add -f dist/channel_info.txt  # บังคับให้เพิ่มไฟล์แม้จะถูก .gitignore
+          git add -f dist/channel_info.txt
           git commit -m "Update generated channel_info.txt"
           git push origin main
 
@@ -39,13 +38,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-
-    post:
-      - name: Post Set up Node.js environment
-        run: echo "Node.js environment setup is complete"
-
-      - name: Post Checkout repository content
-        run: echo "Repository content checkout is complete"
-
-      - name: Complete job
-        run: echo "Job complete"
