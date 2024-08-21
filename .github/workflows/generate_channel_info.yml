@@ -25,11 +25,8 @@ jobs:
       - name: Run generate_channel_info_updated.js script
         run: node generate_channel_info_updated.js
 
-      - name: Move generated file to root
-        run: mv ./channel_info.txt ./dist/channel_info.txt
-
       - name: Upload generated channel_info.txt
         uses: actions/upload-artifact@v4
         with:
           name: channel_info.txt
-          path: ./dist/channel_info.txt
+          path: ./channel_info.txt
