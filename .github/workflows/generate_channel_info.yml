@@ -29,7 +29,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -A  # เพิ่มไฟล์ที่ไม่ได้ถูกติดตามเข้าไปใน commit
+          git add -f dist/channel_info.txt  # บังคับให้เพิ่มไฟล์แม้จะถูก .gitignore
           git commit -m "Update generated channel_info.txt"
           git push origin main
 
