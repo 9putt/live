@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
-// ใช้ API Key ของคุณที่ถูกตั้งค่าใน GitHub Secrets
+// ใช้ API Key ของคุณที่ถูกตั้งค่าใน GitHub Secrets ชื่อ YOUTUBEKEY
 const apiKey = process.env.YOUTUBEKEY;
 
 // ฟังก์ชันสำหรับดึง Channel ID จากชื่อช่อง
@@ -22,7 +22,7 @@ async function getChannelId(channelName) {
     }
 }
 
-// กำหนดเส้นทางไปยังไฟล์ channel.txt ใน root directory
+// กำหนดเส้นทางไปยังไฟล์ channel.txt ใน root directory (main directory)
 const channelFilePath = path.join(__dirname, 'channel.txt');
 
 // ตรวจสอบว่าไฟล์ channel.txt มีอยู่หรือไม่
