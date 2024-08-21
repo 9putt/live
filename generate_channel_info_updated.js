@@ -1,55 +1,43 @@
-const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
-const cheerio = require('cheerio');
 
-const channels = [
-  // รายชื่อช่องแบบ URL เช่น
-  'https://www.youtube.com/@INNNEWS_INN',
-  'https://www.youtube.com/@Mono29tv'
-];
+async function getChannelInfo(channelNameOrURL) {
+    const apiKey = process.env.YOUTUBEKEY; // API key ที่เก็บใน environment variable YOUTUBEKEY
+    let channelId = '';
 
-// ฟังก์ชันสำหรับดึงข้อมูล Channel ID และรูปโปรไฟล์
-async function fetchChannelInfo(url) {
-  try {
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-    
-    // ดึง Channel ID
-    const channelID = $('meta[itemprop="channelId"]').attr('content');
-    
-    // ดึงรูปโปรไฟล์
-    const profilePic = $('meta[property="og:image"]').attr('content');
-    
-    return { channelID, profilePic };
-  } catch (error) {
-    console.error(`Failed to fetch Channel ID for ${url}`);
-    return null;
-  }
-}
+    // ดึงข้อมูล channel ผ่าน API
+    try {
+        const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+            params: {
+                part: 'snippet',
+                q: channelNameOrURL,
+                type: 'channel',
+                key: apiKey
+            }
+        });
 
-// ฟังก์ชันหลักสำหรับการประมวลผลข้อมูลช่อง
-async function generateChannelInfo() {
-  const channelInfoList = [];
+        if (response.data.items.length > 0) {
+            const channel = response.data.items[0];
+            channelId = channel.id.channelId;
+            const profilePicURL = channel.snippet.thumbnails.default.url;
+            
+            console.log(`Channel ID: ${channelId}`);
+            console.log(`Profile Pic URL: ${profilePicURL}`);
 
-  for (const channelUrl of channels) {
-    const info = await fetchChannelInfo(channelUrl);
-    if (info) {
-      channelInfoList.push({
-        url: channelUrl,
-        id: info.channelID,
-        profilePic: info.profilePic,
-      });
+            // สร้างลิงก์ m3u8
+            const m3u8Link = `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`;
+            console.log(`m3u8 Link: ${m3u8Link}`);
+
+            // return ค่า channelId และ profilePicURL
+            return { channelId, profilePicURL, m3u8Link };
+        } else {
+            console.log('ไม่พบช่องที่ระบุ');
+            return null;
+        }
+    } catch (error) {
+        console.error(`เกิดข้อผิดพลาดในการดึงข้อมูล: ${error.message}`);
+        return null;
     }
-  }
-
-  const outputPath = path.join(__dirname, 'channel_info.txt');
-  const channelInfoData = channelInfoList.map(info => 
-    `Channel: ${info.url}\nID: ${info.id}\nProfile Pic: ${info.profilePic}\n`
-  ).join('\n');
-
-  fs.writeFileSync(outputPath, channelInfoData, 'utf8');
-  console.log('Channel information has been written to', outputPath);
 }
 
-generateChannelInfo();
+// ทดสอบการใช้งาน
+getChannelInfo('ชื่อช่องหรือURLช่อง');
