@@ -22,15 +22,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run generate_channel_info_updated.js script
+      - name: Run generate_channel_info.js script
         run: node generate_channel_info_updated.js
 
       - name: Commit and Push generated file to main
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f dist/channel_info.txt
-          git commit -m "Update generated channel_info.txt" || echo "Nothing to commit"
+          git add dist/channel_info.txt
+          git commit -m "Update generated channel_info.txt"
           git push origin main
 
       - name: Deploy to GitHub Pages
