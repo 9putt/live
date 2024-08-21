@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 jobs:
@@ -24,14 +23,14 @@ jobs:
         run: npm install
 
       - name: Run generate_channel_info_updated.js script
-        run: npm run generate
+        run: node generate_channel_info_updated.js
 
       - name: Commit and Push generated file to main
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f dist/channel_info.txt  # ใช้ -f เพื่อ force add ไฟล์
-          git commit -m "Update channel_info.txt"
+          git add -A  # เพิ่มไฟล์ที่ไม่ได้ถูกติดตามเข้าไปใน commit
+          git commit -m "Update generated channel_info.txt"
           git push origin main
 
       - name: Deploy to GitHub Pages
