@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "A script to fetch YouTube Channel ID and profile picture URL from channel names, and generate m3u8 links.",
   "main": "generate_channel_info_updated.js",
- "scripts": {
-  "generate": "node generate_channel_info_updated.js"
-}
-
+  "scripts": {
+    "generate": "node generate_channel_info_updated.js"
   },
   "author": "Your Name",
   "license": "MIT",
