@@ -1,67 +1,68 @@
-const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
 
-const distDir = path.join(__dirname, 'dist');
-if (!fs.existsSync(distDir)){
-    fs.mkdirSync(distDir);
-}
-
-// อ่านลิงก์ YouTube จาก channel.txt
-const channelUrls = fs.readFileSync('channel.txt', 'utf-8').split('\n').filter(Boolean);
-
-async function fetchChannelInfo(channelUrl) {
+// ฟังก์ชันเพื่อดึง Channel ID จาก URL ของ YouTube
+async function getChannelId(url) {
     try {
-        // ดึงข้อมูลจาก contentforest.com เพื่อหา Channel ID
-        const response = await axios.get('https://contentforest.com/tools/youtube-channel-id-finder', {
-            params: { channel: channelUrl }
-        });
-        
-        // ใช้ cheerio เพื่อดึงค่า Channel ID
-        const $ = cheerio.load(response.data);
-        const channelId = $('input[readonly]').val();
+        // ส่งคำขอไปยังหน้าเว็บที่ใช้ดึง Channel ID
+        const response = await axios.get(`https://contentforest.com/tools/youtube-channel-id-finder?url=${encodeURIComponent(url)}`);
+        const html = response.data;
 
-        // ดึงข้อมูลรูปโปรไฟล์จาก contentforest.com อีกฟอร์มหนึ่ง
-        const profileImageResponse = await axios.get('https://contentforest.com/tools/youtube-pfp-downloader', {
-            params: { channel: channelUrl }
-        });
-        const profileImage = profileImageResponse.data.profileImage;
+        // โหลด HTML เข้า cheerio เพื่อทำการ parse
+        const $ = cheerio.load(html);
 
-        if (channelId && profileImage) {
-            return {
-                name: channelUrl.split('@')[1],
-                id: channelId,
-                profileImage: profileImage,
-                m3u8Link: `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`
-            };
+        // ค้นหา Channel ID ใน HTML (ตามตัวอย่างคือ div ที่มี class 'output' หรือที่เหมาะสมตามโครงสร้างจริงของเว็บ)
+        const channelId = $('.channel-id-output').text().trim(); // คุณอาจต้องปรับ class ตามที่หน้าเว็บใช้
+
+        if (channelId) {
+            return channelId;
         } else {
-            console.error(`Failed to fetch complete info for ${channelUrl}`);
-            return null;
+            throw new Error('Channel ID not found');
         }
-
     } catch (error) {
-        console.error(`Failed to fetch channel info for ${channelUrl}: ${error.message}`);
+        console.error(`Failed to fetch Channel ID for ${url}:`, error.message);
         return null;
     }
 }
 
-async function generateChannelInfo() {
-    const channelInfoList = [];
+// ฟังก์ชันหลักสำหรับการประมวลผลข้อมูล
+async function main() {
+    const channelUrls = [
+        'https://youtube.com/@voicetv',
+        'https://youtube.com/@MBCNEWS11',
+        'https://youtube.com/@letanahotelrestaurant24hrs'
+    ];
 
-    for (const channelUrl of channelUrls) {
-        const channelInfo = await fetchChannelInfo(channelUrl);
-        if (channelInfo) {
-            channelInfoList.push(channelInfo);
+    const results = [];
+
+    for (const url of channelUrls) {
+        const channelId = await getChannelId(url);
+        if (channelId) {
+            const m3u8Link = `https://ythls-v3.onrender.com/channel/${channelId}.m3u8`;
+            results.push({
+                url,
+                channelId,
+                m3u8Link
+            });
         }
     }
 
-    const dataToWrite = channelInfoList.map(channel => {
-        return `Channel Name: ${channel.name}\nChannel ID: ${channel.id}\nProfile Image: ${channel.profileImage}\nm3u8 Link: ${channel.m3u8Link}\n\n`;
-    }).join('');
+    // กำหนดโฟลเดอร์ dist
+    const distDir = path.join(__dirname, 'dist');
+    if (!fs.existsSync(distDir)) {
+        fs.mkdirSync(distDir);
+    }
 
-    fs.writeFileSync(path.join(distDir, 'channel_info.txt'), dataToWrite, 'utf8');
-    console.log('Channel information has been written to ./dist/channel_info.txt');
+    // เขียนข้อมูลลงในไฟล์ channel_info.txt
+    const outputFilePath = path.join(distDir, 'channel_info.txt');
+    const outputData = results.map(result => 
+        `Channel URL: ${result.url}\nChannel ID: ${result.channelId}\nm3u8 Link: ${result.m3u8Link}\n`
+    ).join('\n');
+
+    fs.writeFileSync(outputFilePath, outputData, 'utf8');
+    console.log(`Channel information has been written to ${outputFilePath}`);
 }
 
-generateChannelInfo();
+main();
